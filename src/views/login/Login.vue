@@ -1,78 +1,133 @@
 <template>
-	<div class="container">
-		<h1 class="q-mb-xl">Log In</h1>
-		<div class="q-pa-md" style="min-width: 400px">
-			<q-form @submit="onSubmit" class="q-gutter-md">
-				<q-input
-					filled
-					v-model="loginParams.username"
-					label="Account"
-					lazy-rules
-					:rules="[(val) => (val && val.length > 0) || 'Please type something']"
-				/>
+    <div class="container">
+        <h1 class="q-mb-xl">Log In</h1>
 
-				<q-input
-					filled
-					v-model="loginParams.password"
-					label="Password"
-					:type="showPassword ? 'password' : 'text'"
-					:rules="[(val) => (val && val.length > 0) || 'Please type something']"
-				>
-					<template v-slot:append>
-						<q-icon
-							:name="showPassword ? 'visibility_off' : 'visibility'"
-							class="cursor-pointer"
-							@click="showPassword = !showPassword"
-						/>
-					</template>
-				</q-input>
+        <div
+            class="q-pa-md"
+            style="min-width: 400px"
+        >
+            <q-form
+                @submit="login"
+                class="q-gutter-md"
+            >
+                <q-input
+                    filled
+                    v-model="loginForm.username"
+                    label="Account"
+                    lazy-rules
+                    :rules="[(val) => (val && val.length > 0) || 'Account is required']"
+                />
 
-				<q-toggle v-model="rememberMe" label="Remember me" />
+                <q-input
+                    filled
+                    v-model="loginForm.password"
+                    label="Password"
+                    :type="hidePassword ? 'password' : 'text'"
+                    :rules="[(val) => (val && val.length > 0) || 'Password is required']"
+                >
+                    <template v-slot:append>
+                        <q-icon
+                            :name="hidePassword ? 'visibility_off' : 'visibility'"
+                            class="cursor-pointer"
+                            @click="hidePassword = !hidePassword"
+                        />
+                    </template>
+                </q-input>
 
-				<div class="login-button">
-					<q-btn label="Login" type="submit" color="primary" />
-				</div>
-			</q-form>
-		</div>
-	</div>
+                <q-toggle
+                    v-model="rememberMe"
+                    label="Remember me"
+                />
+
+                <div class="login-button">
+                    <q-btn
+                        label="Login"
+                        type="submit"
+                        color="primary"
+                    />
+                </div>
+            </q-form>
+
+            <div class="footer">
+                <span>Made by Ivan</span>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { useQuasar } from "quasar";
-import { ref } from "vue";
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+import { useQuasar } from 'quasar';
+import { API, responseFilter } from '@/helpers/';
+
+const router = useRouter();
 const $q = useQuasar();
 
-const showPassword = ref(true);
+const hidePassword = ref(true);
 
 const rememberMe = ref(false);
 
-const loginParams = ref({
-	username: "",
-	password: "",
+const loginForm = ref({
+    username: '',
+    password: '',
 });
 
-function onSubmit() {
-	$q.notify({
-		color: "green-4",
-		textColor: "white",
-		icon: "cloud_done",
-		message: "Submitted",
-	});
+async function login() {
+    const payload = loginForm.value;
+    const result = await API.Login(payload);
+
+    if (result.status !== 200) {
+        responseFilter(result.status, $q);
+        localStorage.removeItem('auth');
+
+        return null;
+    }
+
+    localStorage.setItem('auth', JSON.stringify(result.data));
+
+    if (rememberMe.value) {
+        localStorage.setItem('userInfo', JSON.stringify(payload));
+    } else {
+        localStorage.removeItem('userInfo');
+    }
+
+    router.push({ name: 'order' });
 }
+
+function checkRememberMe() {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (!!userInfo) {
+        const { username, password } = userInfo;
+        loginForm.value.username = username;
+        loginForm.value.password = password;
+
+        rememberMe.value = true;
+    }
+}
+checkRememberMe();
 </script>
 
-<style lang="scss">
-.login-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
+<style scoped lang="scss">
 .container {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+
+    .login-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .footer {
+        margin-top: 50px;
+        width: 100%;
+        text-align: right;
+        color: gray;
+    }
 }
 </style>
