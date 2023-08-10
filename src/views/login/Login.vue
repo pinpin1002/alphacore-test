@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <h1 class="q-mb-xl">Log In</h1>
+        <h1 class="q-mb-xl">LOGIN</h1>
 
         <div
             class="q-pa-md"
@@ -44,6 +44,7 @@
                         label="Login"
                         type="submit"
                         color="primary"
+                        :loading="loading"
                     />
                 </div>
             </q-form>
@@ -69,12 +70,16 @@ const hidePassword = ref(true);
 
 const rememberMe = ref(false);
 
+const loading = ref(false);
+
 const loginForm = ref({
     username: '',
     password: '',
 });
 
 async function login() {
+    loading.value = true;
+
     const payload = loginForm.value;
     const result = await API.Login(payload);
 
@@ -82,6 +87,7 @@ async function login() {
         responseFilter(result.status, $q);
         localStorage.removeItem('auth');
 
+        loading.value = false;
         return null;
     }
 
@@ -93,6 +99,7 @@ async function login() {
         localStorage.removeItem('userInfo');
     }
 
+    loading.value = false;
     router.push({ name: 'order' });
 }
 

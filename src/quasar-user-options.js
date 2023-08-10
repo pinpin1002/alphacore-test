@@ -1,9 +1,9 @@
-import "quasar/dist/quasar.css";
-import "@quasar/extras/material-icons/material-icons.css";
-import { Notify } from "quasar";
+import 'quasar/dist/quasar.css';
+import '@quasar/extras/material-icons/material-icons.css';
+import { Notify } from 'quasar';
 
 // To be used on app.use(Quasar, { ... })
 export default {
-	config: { dark: true },
-	plugins: { Notify },
+    config: { dark: true },
+    plugins: { Notify },
 };
